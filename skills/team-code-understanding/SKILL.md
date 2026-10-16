@@ -42,15 +42,15 @@ Spawn in parallel, one message. Scale to complexity:
 
 - **Code researchers** — one per confirmed focus area. Brief: the topic, the focus area, scout findings relevant to it, the claim format. Trace real flows end to end (call sites, data, config, tests). Positioning question: *how does the topic relate to this code — what exists, what is missing, what would it touch, what constrains it?*
 - **Adversarial researcher(s)** — told to try to break the emerging picture: find counter-examples, dead code that looks live, config/feature-flag paths that change behaviour, tests that contradict assumptions, places where the obvious reading is wrong, and gaps scouts glossed over. Give them the scout sketch and focus areas. They return refutations and risks in the same claim format.
-- **Web researchers** — non-code context only: specs, RFCs, vendor/library docs, known issues, prior art, design rationale, blog posts by maintainers. Use WebSearch/WebFetch. Cite URLs; prefer primary sources; note publication date. Must not make claims about this repo's code.
+- **Web researchers** (`general-purpose`, since they need WebSearch/WebFetch) — non-code context only: specs, RFCs, vendor/library docs, known issues, prior art, design rationale, blog posts by maintainers. Use WebSearch/WebFetch. Cite URLs; prefer primary sources; note publication date. Must not make claims about this repo's code.
 
 ## Phase 3 — Arbitration
 
-Spawn one **arbiter** agent (a fresh `general-purpose` agent) and give it all claim lists, the topic, and the confirmed focus. It must:
+Spawn one **arbiter** agent (a fresh `general-purpose` agent; note its ID) and give it all claim lists, the topic, and the confirmed focus. It must:
 
 1. Keep a claim only if the citation exists and supports the statement. Spot-check by reading the cited lines/URLs; check the high-impact claims first.
 2. Drop uncited, vague, speculative, or duplicated claims. Resolve conflicts between researchers (adversarial findings that survive checking override a researcher's claim and are reported as caveats).
-3. If a claim is important but weak, it may ask **the originating researcher** (via `SendMessage`) to confirm it. Budget: at most one round per claim, and no more than ~5 queries in total. After that, drop it or downgrade it to `INFERENCE`/`UNKNOWN`.
+3. If a claim is important but weak, it may ask **the originating researcher** to confirm it. Subagents can't message each other, so the arbiter ends its turn with a `CONFIRM` list instead of a report: `claim id | researcher | exact question`. Budget: at most ~5 queries in total, one round per claim. You (the orchestrator) forward each question to that researcher with `SendMessage` (keep the agent IDs from Phase 2), then `SendMessage` the answers back to the arbiter, which continues to step 4. Claims still weak after that are dropped or downgraded to `INFERENCE`/`UNKNOWN`. If nothing needs confirming, the arbiter goes straight to step 4.
 4. Write the report with this structure:
    - **Summary** — the topic positioned against the code base, in a few sentences.
    - **How it fits** — per focus area: what exists, how it works, key paths (all cited).
