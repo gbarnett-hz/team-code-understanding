@@ -13,16 +13,16 @@ Rules for every agent you spawn:
 - Label each claim `FACT` (read directly in the cited source), `INFERENCE` (reasoned from cited facts; list them), or `UNKNOWN` (looked, could not determine).
 - Return claims as a list: `id | label | statement | citation(s) | confidence (high/med/low)`.
 
-## Phase 1 — Expedition (fast, cheap)
+## Phase 1 — Expedition (light, quick orientation)
 
-Spawn 3–5 `Explore` agents in parallel, one message. Each gets the topic plus one lens:
+This pass is deliberately shallow: skim structure, grep for the topic, read a few key files. No deep tracing, no exhaustive reads, aim for a few minutes per scout. Depth is Phase 2's job. Spawn 3–5 `Explore` agents in parallel, one message. Each gets the topic plus one lens:
 1. **Structure** — languages, build system, module/package layout, entry points, size.
 2. **Topic hits** — where the topic (and its synonyms) appears: code, config, tests, docs, ADRs, issues/commit messages.
 3. **Architecture & data flow** — the main runtime paths the topic could touch; boundaries, interfaces, persistence.
 4. **History & ownership** — `git log`/blame hot spots near the topic, recent churn, key contributors (skip if not a git repo).
 5. (If the repo is large or polyglot) **Dependencies & integration edges** — external services, libraries, protocols relevant to the topic.
 
-Each returns ≤ 400 words: a sketch plus 2–5 candidate focus areas, each with the paths involved and a size estimate, **plus a list of recommended experts** (see below).
+Each returns ≤ 400 words, from a quick look only: a sketch plus 2–5 candidate focus areas, each with the paths involved and a size estimate, **plus a list of recommended experts** (see below).
 
 **Expert recommendations.** The team in Phase 2 is a team of genuine domain experts, chosen from what the scouts actually found: languages, runtimes, frameworks, data stores, protocols, and the nature of the topic. Each scout names the specific expertise the topic demands here, with a one-line reason and the paths it applies to. Be specific and deep, not generic. Examples (illustrative, not a fixed list; the skill is language-agnostic):
 - Java + shared mutable state: *Java Memory Model / concurrency expert* (happens-before, volatile/final-field semantics, `VarHandle`, safe publication, lock striping, `j.u.c` internals).
@@ -39,6 +39,8 @@ Then you (the orchestrator):
 - Present to the user and **stop**. Ask them to confirm, drop, add, or re-prioritise areas. Do not start Phase 2 until they reply.
 
 ## Phase 2 — Research (after confirmation)
+
+**Announce the team first.** After the user confirms and before spawning anything, tell them which personas you are about to start and why. One line per persona: name, what it will examine, and the specific scout finding that justifies it (e.g. "Java memory model expert: the topic touches `Foo.cache`, a shared mutable map (scout 3, `src/Foo.java`)"). Do the same for the adversarial and web researchers. Every persona must trace back to scout evidence or a user addition; drop any that don't. Then spawn without waiting for another reply.
 
 Spawn in parallel, one message. Scale to complexity:
 
